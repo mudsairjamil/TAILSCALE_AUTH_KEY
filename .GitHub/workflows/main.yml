@@ -1,0 +1,26 @@
+name: RDP-Kashmir-Final
+on: 
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Install Tailscale
+        run: |
+          curl.exe -LO https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe
+          start-process -FilePath "tailscale-setup-latest.exe" -ArgumentList "/quiet" -Wait
+      - name: Connect Tailscale
+        shell: powershell
+        env:
+          TS_AUTHKEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
+        run: |
+          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$env:TS_AUTHKEY --hostname=kashmir-pc
+      - name: Setup User
+        run: |
+          net user Mudasir Jamil786 /add
+          net localgroup administrators Mudasir /add
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+      - name: Keep Alive
+        run: |
+          while ($true) { Start-Sleep -Seconds 3600 }
